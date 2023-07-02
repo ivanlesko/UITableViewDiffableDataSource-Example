@@ -1,0 +1,1 @@
+The goal of this repo is to show how UITableViewDiffableDataSource can be used with multiple `struct` types that conform to the same protocol. 

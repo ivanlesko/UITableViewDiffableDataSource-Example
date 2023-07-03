@@ -93,31 +93,25 @@ class ViewController: UIViewController {
     }
     
     @objc internal func addRandomFriend(_ sender: UIButton) {
-        dataSource.defaultRowAnimation = .right
-        dataSource.appendFriend(Friend.random as! Friend)
+        dataSource.appendFriend(Friend.random())
     }
     
     @objc internal func removeRandomFriend(_ sender: UIButton) {
-        dataSource.defaultRowAnimation = .left
         dataSource.removeRandomFriend()
     }
     
     @objc internal func addRandomContact(_ sender: UIButton) {
-        dataSource.defaultRowAnimation = .right
-        dataSource.appendContact(Contact.random as! Contact)
+        dataSource.appendContact(Contact.random())
     }
     
     @objc internal func removeRandomContact(_ sender: UIButton) {
-        dataSource.defaultRowAnimation = .left
         dataSource.removeRandomContact()
     }
 }
 
 fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection, AnyHashable> {
     
-    private var sections: [UserSection] {
-        return [.friends, .contacts]
-    }
+    private let sections = UserSection.allCases
     
     var cancellables = Set<AnyCancellable>()
     @Published private var friends = [Friend]()
@@ -143,7 +137,6 @@ fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection
         
         configureInitialSnapshot()
         setupObservers()
-        
     }
     
     private func setupObservers() {
@@ -156,7 +149,17 @@ fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return sections[section].title
+        let title = String(arrayFor(sections[section]).count) + " " + sections[section].rawValue
+        return title
+    }
+    
+    private func arrayFor(_ section: UserSection) -> [User] {
+        switch section {
+        case .friends:
+            return friends
+        case .contacts:
+            return contacts
+        }
     }
     
     private func configureInitialSnapshot() {
@@ -174,20 +177,24 @@ fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection
     }
     
     public func appendFriend(_ friend: Friend) {
+        defaultRowAnimation = .right
         friends.insert(friend, at: 0)
     }
     
     public func removeRandomFriend() {
+        defaultRowAnimation = .left
         if let index = friends.indices.randomElement() {
             friends.remove(at: index)
         }
     }
     
     public func appendContact(_ contact: Contact) {
+        defaultRowAnimation = .right
         contacts.insert(contact, at: 0)
     }
     
     public func removeRandomContact() {
+        defaultRowAnimation = .left
         if let index = contacts.indices.randomElement() {
             contacts.remove(at: index)
         }
@@ -196,27 +203,24 @@ fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection
 
 // MARK: Models
 
-enum UserSection {
-    case friends
-    case contacts
-    
-    var title: String {
-        switch self {
-        case .friends:
-            return "Friends"
-        case .contacts:
-            return "Contacts"
-        }
-    }
+/// Defines a protocol that will return a random object for a given type.
+protocol RandomObject {
+    associatedtype T
+    static func random() -> T
 }
 
-protocol User: Identifiable {
+/// Defines the type of sections that can be used in the table view
+enum UserSection: String, CaseIterable {
+    case friends = "Friends"
+    case contacts = "Contacts"
+}
+
+protocol Person: Identifiable {
     var firstName: String { get }
     var lastName: String { get }
-    static var random: any User { get }
 }
 
-protocol UserRow: User, Hashable {
+protocol UserRow: Person, Hashable {
     var title: String { get }
     var subtitle: String? { get }
 }
@@ -225,7 +229,7 @@ extension UserRow {
     var title: String {
         firstName + " " + lastName
     }
-    
+
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
@@ -235,32 +239,44 @@ extension UserRow {
     }
 }
 
-private struct Friend: User, UserRow, Hashable {
+private class User: Person, UserRow {
     var firstName: String
     var lastName: String
+    var subtitle: String?
     let id = UUID()
-    var subtitle: String? {
-        return nil
-    }
     
-    static var random: any User {
+    init(firstName: String, lastName: String) {
+        self.firstName = firstName
+        self.lastName = lastName
+    }
+}
+
+private class Friend: User, RandomObject {
+    static func random() -> Friend {
         Friend(firstName: Name.randomFirstName, lastName: Name.randomLastName)
     }
 }
 
-private struct Contact: User, UserRow, Hashable {
-    var firstName: String
-    var lastName: String
-    let id = UUID()
+private class Contact: User, RandomObject {
     var phoneNumber: String?
     
-    static var random: any User {
-        let number = Bool.random() ? Phone.randomNumber : nil
-        return Contact(firstName: Name.randomFirstName, lastName: Name.randomLastName, phoneNumber: number)
+    override var subtitle: String? {
+        get {
+            return phoneNumber ?? "missing #"
+        }
+        set {
+            super.subtitle = newValue
+        }
     }
     
-    var subtitle: String? {
-        phoneNumber ?? "missing #"
+    init(firstName: String, lastName: String, phoneNumber: String? = nil) {
+        super.init(firstName: firstName, lastName: lastName)
+        self.phoneNumber = phoneNumber
+    }
+    
+    static func random() -> Contact {
+        let number = Bool.random() ? Phone.randomNumber : nil
+        return Contact(firstName: Name.randomFirstName, lastName: Name.randomLastName, phoneNumber: number)
     }
 }
 

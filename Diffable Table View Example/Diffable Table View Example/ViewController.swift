@@ -140,6 +140,14 @@ fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection
         applySnapshot(animated: false)
     }
     
+    private func applySnapshot(animated: Bool) {
+        var snapshot = NSDiffableDataSourceSnapshot<UserSection, AnyHashable>()
+        snapshot.appendSections(sections)
+        snapshot.appendItems(friends, toSection: .friends)
+        snapshot.appendItems(contacts, toSection: .contacts)
+        apply(snapshot, animatingDifferences: animated)
+    }
+    
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         let title = String(arrayFor(sections[section]).count) + " " + sections[section].rawValue
         return title
@@ -153,15 +161,7 @@ fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection
             return contacts
         }
     }
-    
-    private func applySnapshot(animated: Bool) {
-        var snapshot = NSDiffableDataSourceSnapshot<UserSection, AnyHashable>()
-        snapshot.appendSections(sections)
-        snapshot.appendItems(friends, toSection: .friends)
-        snapshot.appendItems(contacts, toSection: .contacts)
-        apply(snapshot, animatingDifferences: animated)
-    }
-    
+
     public func appendFriend(_ friend: Friend) {
         guard !isAnimating else { return }
         

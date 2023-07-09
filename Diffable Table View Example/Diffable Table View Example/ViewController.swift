@@ -114,8 +114,10 @@ fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection
     private let sections = UserSection.allCases
     
     var cancellables = Set<AnyCancellable>()
-    @Published private var friends = [Friend]()
-    @Published private var contacts = [Contact]()
+    private var friends = [Friend]()
+    private var contacts = [Contact]()
+    
+    private var isAnimating = false
     
     init(tableView: UITableView) {
         super.init(tableView: tableView) { tableView, indexPath, item in
@@ -135,17 +137,7 @@ fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection
             return cell
         }
         
-        configureInitialSnapshot()
-        setupObservers()
-    }
-    
-    private func setupObservers() {
-        Publishers.CombineLatest($friends, $contacts)
-            .receive(on: RunLoop.main)
-            .sink { [unowned self] _ in
-                self.applySnapshot()
-            }
-            .store(in: &cancellables)
+        applySnapshot(animated: false)
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
@@ -162,41 +154,93 @@ fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection
         }
     }
     
-    private func configureInitialSnapshot() {
-        var snapshot = NSDiffableDataSourceSnapshot<UserSection, AnyHashable>()
-        snapshot.appendSections(sections)
-        apply(snapshot, animatingDifferences: false)
-    }
-    
-    private func applySnapshot() {
+    private func applySnapshot(animated: Bool) {
         var snapshot = NSDiffableDataSourceSnapshot<UserSection, AnyHashable>()
         snapshot.appendSections(sections)
         snapshot.appendItems(friends, toSection: .friends)
         snapshot.appendItems(contacts, toSection: .contacts)
-        apply(snapshot, animatingDifferences: true)
+        apply(snapshot, animatingDifferences: animated)
     }
     
     public func appendFriend(_ friend: Friend) {
+        guard !isAnimating else { return }
+        
         defaultRowAnimation = .right
+        
+        var curr = snapshot()
+        if let first = friends.first {
+            curr.insertItems([friend], beforeItem: first)
+        } else {
+            curr.appendItems([friend], toSection: .friends)
+        }
         friends.insert(friend, at: 0)
+        
+        isAnimating = true
+        apply(curr, animatingDifferences: true) { [weak self] in
+            curr.reloadSections([.friends])
+            self?.defaultRowAnimation = .none
+            self?.apply(curr, animatingDifferences: false)
+            self?.isAnimating = false
+        }
     }
     
     public func removeRandomFriend() {
+        guard !isAnimating else { return }
+        
         defaultRowAnimation = .left
         if let index = friends.indices.randomElement() {
+            let friend = friends[index]
             friends.remove(at: index)
+            
+            var curr = snapshot()
+            curr.deleteItems([friend])
+            isAnimating = true
+            apply(curr, animatingDifferences: true) { [weak self] in
+                curr.reloadSections([.friends])
+                self?.apply(curr, animatingDifferences: false)
+                self?.isAnimating = false
+            }
         }
     }
     
     public func appendContact(_ contact: Contact) {
+        guard !isAnimating else { return }
+        
         defaultRowAnimation = .right
+        
+        var curr = snapshot()
+        if let first = friends.first {
+            curr.insertItems([contact], beforeItem: first)
+        } else {
+            curr.appendItems([contact], toSection: .contacts)
+        }
         contacts.insert(contact, at: 0)
+        
+        isAnimating = true
+        apply(curr, animatingDifferences: true) { [weak self] in
+            curr.reloadSections([.contacts])
+            self?.defaultRowAnimation = .none
+            self?.apply(curr, animatingDifferences: false)
+            self?.isAnimating = false
+        }
     }
     
     public func removeRandomContact() {
+        guard !isAnimating else { return }
+        
         defaultRowAnimation = .left
         if let index = contacts.indices.randomElement() {
+            let contact = contacts[index]
             contacts.remove(at: index)
+            
+            var curr = snapshot()
+            curr.deleteItems([contact])
+            isAnimating = true
+            apply(curr, animatingDifferences: true) { [weak self] in
+                curr.reloadSections([.contacts])
+                self?.apply(curr, animatingDifferences: false)
+                self?.isAnimating = false
+            }
         }
     }
 }

@@ -10,6 +10,7 @@
 		4ECD94382A5E63F800266AB2 /* firstNames.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4ECD94372A5E63F800266AB2 /* firstNames.txt */; };
 		4ECD943A2A5E640300266AB2 /* lastNames.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4ECD94392A5E640300266AB2 /* lastNames.txt */; };
 		4ECD943C2A5E640C00266AB2 /* phoneNumbers.txt in Resources */ = {isa = PBXBuildFile; fileRef = 4ECD943B2A5E640C00266AB2 /* phoneNumbers.txt */; };
+		4ECD943E2A5E694B00266AB2 /* ClosureButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECD943D2A5E694B00266AB2 /* ClosureButton.swift */; };
 		4EDBE5C72A5235FB002DADFF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EDBE5C62A5235FB002DADFF /* AppDelegate.swift */; };
 		4EDBE5C92A5235FB002DADFF /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EDBE5C82A5235FB002DADFF /* SceneDelegate.swift */; };
 		4EDBE5CB2A5235FB002DADFF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EDBE5CA2A5235FB002DADFF /* ViewController.swift */; };
@@ -22,6 +23,7 @@
 		4ECD94372A5E63F800266AB2 /* firstNames.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = firstNames.txt; sourceTree = "<group>"; };
 		4ECD94392A5E640300266AB2 /* lastNames.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = lastNames.txt; sourceTree = "<group>"; };
 		4ECD943B2A5E640C00266AB2 /* phoneNumbers.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = phoneNumbers.txt; sourceTree = "<group>"; };
+		4ECD943D2A5E694B00266AB2 /* ClosureButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosureButton.swift; sourceTree = "<group>"; };
 		4EDBE5C32A5235FB002DADFF /* Diffable Table View Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Diffable Table View Example.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4EDBE5C62A5235FB002DADFF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4EDBE5C82A5235FB002DADFF /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -72,6 +74,7 @@
 				4ECD94372A5E63F800266AB2 /* firstNames.txt */,
 				4ECD94392A5E640300266AB2 /* lastNames.txt */,
 				4ECD943B2A5E640C00266AB2 /* phoneNumbers.txt */,
+				4ECD943D2A5E694B00266AB2 /* ClosureButton.swift */,
 			);
 			path = "Diffable Table View Example";
 			sourceTree = "<group>";
@@ -153,6 +156,7 @@
 				4EDBE5CB2A5235FB002DADFF /* ViewController.swift in Sources */,
 				4EDBE5C72A5235FB002DADFF /* AppDelegate.swift in Sources */,
 				4EDBE5C92A5235FB002DADFF /* SceneDelegate.swift in Sources */,
+				4ECD943E2A5E694B00266AB2 /* ClosureButton.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

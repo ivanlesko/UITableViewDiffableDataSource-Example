@@ -11,11 +11,11 @@ import Combine
 class ViewController: UIViewController {
     
     private lazy var table: UITableView = {
-        let t = UITableView()
-        t.register(SubtitleTableViewCell.self, forCellReuseIdentifier: SubtitleTableViewCell.identifier)
-        t.translatesAutoresizingMaskIntoConstraints = false
-        t.allowsSelection = false
-        return t
+        let table = UITableView()
+        table.register(SubtitleTableViewCell.self, forCellReuseIdentifier: SubtitleTableViewCell.identifier)
+        table.translatesAutoresizingMaskIntoConstraints = false
+        table.allowsSelection = false
+        return table
     }()
     
     private lazy var dataSource = UserTableDataSource(tableView: table)
@@ -53,6 +53,7 @@ class ViewController: UIViewController {
         _ = dataSource
     }
     
+    /// Setup buttons that trigger remove/delete actions
     private func configureStackViews() {
         view.addSubview(stack)
         NSLayoutConstraint.activate([
@@ -63,23 +64,13 @@ class ViewController: UIViewController {
         
         [contactsStack, friendsStack].forEach { stack.addArrangedSubview($0) }
         
-        let addFriend = UIButton(type: .roundedRect)
-        addFriend.setTitle("Add random friend", for: .normal)
-        addFriend.addTarget(self, action: #selector(addRandomFriend(_:)), for: .primaryActionTriggered)
+        [ClosureButton(title: "Add random friend") { self.dataSource.appendFriend(Friend.random()) },
+         ClosureButton(title: "Remove random friend") { self.dataSource.removeRandomFriend() }]
+            .forEach { friendsStack.addArrangedSubview($0) }
         
-        let removeFriend = UIButton(type: .roundedRect)
-        removeFriend.setTitle("Remove random friend", for: .normal)
-        removeFriend.addTarget(self, action: #selector(removeRandomFriend(_:)), for: .primaryActionTriggered)
-        [addFriend, removeFriend].forEach { friendsStack.addArrangedSubview($0) }
-        
-        let addContact = UIButton(type: .roundedRect)
-        addContact.setTitle("Add random contact", for: .normal)
-        addContact.addTarget(self, action: #selector(addRandomContact(_:)), for: .primaryActionTriggered)
-        
-        let removeContact = UIButton(type: .roundedRect)
-        removeContact.setTitle("Remove random contact", for: .normal)
-        removeContact.addTarget(self, action: #selector(removeRandomContact(_:)), for: .primaryActionTriggered)
-        [addContact, removeContact].forEach { contactsStack.addArrangedSubview($0) }
+        [ClosureButton(title: "Add random contact") { self.dataSource.appendContact(Contact.random()) },
+         ClosureButton(title: "Remove random contact") { self.dataSource.removeRandomContact()}]
+            .forEach { contactsStack.addArrangedSubview($0) }
     }
     
     private func configureTableView() {
@@ -90,22 +81,6 @@ class ViewController: UIViewController {
             table.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             table.bottomAnchor.constraint(equalTo: stack.topAnchor, constant: -16)
         ])
-    }
-    
-    @objc internal func addRandomFriend(_ sender: UIButton) {
-        dataSource.appendFriend(Friend.random())
-    }
-    
-    @objc internal func removeRandomFriend(_ sender: UIButton) {
-        dataSource.removeRandomFriend()
-    }
-    
-    @objc internal func addRandomContact(_ sender: UIButton) {
-        dataSource.appendContact(Contact.random())
-    }
-    
-    @objc internal func removeRandomContact(_ sender: UIButton) {
-        dataSource.removeRandomContact()
     }
 }
 

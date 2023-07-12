@@ -10,6 +10,8 @@ import Combine
 
 class ViewController: UIViewController {
     
+    private lazy var dataSource = UserTableDataSource(tableView: table)
+    
     private lazy var table: UITableView = {
         let table = UITableView()
         table.register(SubtitleTableViewCell.self, forCellReuseIdentifier: SubtitleTableViewCell.identifier)
@@ -17,8 +19,6 @@ class ViewController: UIViewController {
         table.allowsSelection = false
         return table
     }()
-    
-    private lazy var dataSource = UserTableDataSource(tableView: table)
     
     private lazy var stack: UIStackView = {
         let stack = UIStackView()
@@ -90,7 +90,6 @@ fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection
     private var friends = [Friend]()
     private var contacts = [Contact]()
     
-    
     init(tableView: UITableView) {
         super.init(tableView: tableView) { tableView, indexPath, item in
             guard let cell = tableView.dequeueReusableCell(withIdentifier: SubtitleTableViewCell.identifier, for: indexPath) as? SubtitleTableViewCell else {
@@ -109,10 +108,21 @@ fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection
             return cell
         }
         
+        // Applies the initial snapshot to the table view data source.
         applySnapshot(animated: false)
     }
     
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        // Returns the number of `User` objects in the section + the count
+        let title = String(arrayFor(sections[section]).count) + " " + sections[section].rawValue
+        return title
+    }
+    
+    /// Used as a `reloadData()` alternative.  Call this to reload
+    /// all of the sections and items.
+    /// - Parameter animated: animate the differences.
     private func applySnapshot(animated: Bool) {
+        defaultRowAnimation = .fade
         var snapshot = NSDiffableDataSourceSnapshot<UserSection, AnyHashable>()
         snapshot.appendSections(sections)
         snapshot.appendItems(friends, toSection: .friends)
@@ -120,11 +130,7 @@ fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection
         apply(snapshot, animatingDifferences: animated)
     }
     
-    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        let title = String(arrayFor(sections[section]).count) + " " + sections[section].rawValue
-        return title
-    }
-    
+    /// Convenience function to get a specific array for a given section.
     private func arrayFor(_ section: UserSection) -> [User] {
         switch section {
         case .friends:
@@ -135,7 +141,16 @@ fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection
     }
     
     public func appendFriend(_ friend: Friend) {
-        // Reload section title only
+        /**
+         This function has a two goals and has to be performned in a specific order.
+         1. Reload the section title with the current friend count but don't use an animation
+         for the reload.  This is accomplished by inserting `friend` at the beginning
+         of the friends array and immediately reloading the `.friends` section.
+         We get the current snapshot of the data source and only reload the section
+         at this point.  This forces
+         `tableView(_ tableView: UITableView, titleForHeaderInSection section: Int)`
+         to perform a reload and display the string returned.
+         */
         let count = friends.count
         defaultRowAnimation = .none
         friends.insert(friend, at: 0)
@@ -143,7 +158,12 @@ fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection
         curr.reloadSections([.friends])
         apply(curr, animatingDifferences: false)
         
-        // Insert item animated after section title reload
+        /**
+         2. After the section header title has been refreshed we can how perform the
+         row insert with animation by inserting the new friend into the `.friend` section.
+         We track the number of friends before the `friends` insert so we know
+         if `snapshot.appendItems` or `snapshot.insertItemsBeforeItem` should be called.
+         */
         curr = snapshot()
         defaultRowAnimation = .right
         
@@ -154,10 +174,18 @@ fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection
             curr.insertItems([friend], beforeItem: curr.itemIdentifiers(inSection: .friends).first!)
         }
         
+        // Apply the latest snapshot with the row insert.
         apply(curr, animatingDifferences: true)
     }
     
     public func removeRandomFriend() {
+        /**
+         The order of operations for removing a friend row is similar to
+         appending a friend row.  The `friends` section is reloaded first
+         without animation.  Once the apply snapshot closure has been called
+         we can delete the friend item from the latest snapshot and
+         apply the updated snapshot and animate the difference.
+         */
         if let index = friends.indices.randomElement() {
             let friend = friends[index]
             friends.remove(at: index)
@@ -175,7 +203,8 @@ fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection
     }
     
     public func appendContact(_ contact: Contact) {
-        // Reload section title only
+        // Refer to `appendFriend(_ friend: Friend)` for a detailed
+        // explanation of how this works since the code is duplicated.
         let count = contacts.count
         defaultRowAnimation = .none
         contacts.insert(contact, at: 0)
@@ -198,6 +227,8 @@ fileprivate class UserTableDataSource: UITableViewDiffableDataSource<UserSection
     }
     
     public func removeRandomContact() {
+        // See `removeRandomFriend()` for a detailed explanation
+        // of how this works since the code is duplicated.
         if let index = contacts.indices.randomElement() {
             let contact = contacts[index]
             contacts.remove(at: index)
@@ -245,6 +276,10 @@ extension UserRow {
     }
 
     func hash(into hasher: inout Hasher) {
+        /**
+         Since `Person` conforms to `Identifiable`
+         we can use its unique id to generate the hash.
+         */
         hasher.combine(id)
     }
 
